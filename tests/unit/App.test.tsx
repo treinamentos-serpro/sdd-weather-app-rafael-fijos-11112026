@@ -6,6 +6,38 @@ import CurrentWeather from '../../src/components/CurrentWeather';
 import { mockLocation } from '../../src/mocks/weather';
 
 describe('App', () => {
+  it.each([
+    ['idle', 'Busque uma cidade para consultar o clima.'],
+    ['loading', 'Carregando...'],
+    ['empty', 'Nenhum resultado encontrado.'],
+    ['error', 'Não foi possível carregar os dados.'],
+  ] as const)('exibe o estado %s sem os dados de demonstração', (initialStatus, message) => {
+    render(<App initialStatus={initialStatus} />);
+
+    expect(screen.getByRole('search')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Fahrenheit' })).toBeInTheDocument();
+    expect(screen.getByRole('contentinfo')).toHaveTextContent('pendentes de validação');
+    expect(screen.getByRole('region', { name: 'Conteúdo meteorológico' })).toHaveTextContent(
+      message,
+    );
+    expect(screen.queryByRole('heading', { name: 'São Paulo' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Previsão de 5 dias' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/dados de demonstração/i)).not.toBeInTheDocument();
+  });
+
+  it('mantém a unidade escolhida ao sair do erro para a demonstração', async () => {
+    const user = userEvent.setup();
+    render(<App initialStatus="error" />);
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Não foi possível carregar os dados.');
+    await user.click(screen.getByRole('button', { name: 'Fahrenheit' }));
+    await user.click(screen.getByRole('button', { name: 'Tentar novamente' }));
+
+    expect(screen.getByText('76°F')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Previsão de 5 dias' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('monta a busca, o seletor e o Hero com dados de demonstração', () => {
     render(<App />);
 
