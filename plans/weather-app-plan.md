@@ -16,11 +16,12 @@ flowchart TD
     APP <--> STORAGE[Preferências locais]
 ```
 
-- **Apresentação (`components/`)**: busca, opções de localidade, cartões de capitais, clima atual, previsão, seletor de unidade e estados de carregamento/erro/vazio. Componentes recebem dados e ações por props.
+- **Apresentação (`components/`)**: busca, opções de localidade, cartões de capitais, clima atual, previsão, seletor de unidade, estados de carregamento/erro/vazio e atribuição global da fonte. Componentes recebem dados e ações por props.
 - **Orquestração (`hooks/`)**: coordena localização inicial, seleção, buscas concorrentes, consultas meteorológicas, tentativas e persistência. A seleção de localidade é a chave de associação de todo dado apresentado.
 - **Domínio (`lib/`)**: validação e normalização de consulta, cálculos de datas locais, conversão e arredondamento de temperatura, mapeamento de códigos meteorológicos e formatação pt-BR. Funções puras, sem `fetch` ou acesso direto ao navegador.
 - **Integração (`services/`)**: adaptadores para Geocoding e Forecast, normalização de respostas, timeout, cancelamento e erros tipados.
 - **Persistência**: adaptador pequeno sobre `localStorage`, isolado para que falhas ou conteúdo inválido não impeçam a inicialização.
+- **Atribuição**: rodapé global renderizado pelo shell da aplicação. Texto e link vêm do gate de termos aprovado; a publicação fica bloqueada enquanto esse conteúdo não estiver confirmado.
 
 Clima atual e previsão são carregados em paralelo e têm estados de seção independentes. O prazo total da atualização começa na seleção e é de oito segundos; a expiração encerra a tentativa visível, aborta o que for possível e ignora conclusões tardias. As capitais aparecem sem aguardar o clima e cada cartão carrega seus dados separadamente.
 
@@ -33,6 +34,7 @@ Clima atual e previsão são carregados em paralelo e têm estados de seção in
 | Estilo | Tailwind CSS | Implementação visual conforme o tema e os padrões existentes. |
 | Testes unitários/componentes | Vitest + Testing Library | Domínio, adaptadores, hooks e estados acessíveis. |
 | Testes E2E | Playwright | Fluxos completos, teclado e viewports definidos na spec. |
+| Auditoria de acessibilidade E2E | `@axe-core/playwright` | Verificações automatizadas WCAG 2.2 AA nos estados principais; dependência somente de teste. |
 | Dados candidatos | Open-Meteo Geocoding e Forecast | Sem chave de API; uso em produção condicionado aos quatro gates da spec. |
 | Qualidade | Biome | Lint e formatação conforme configuração do repositório. |
 
@@ -53,6 +55,7 @@ src/
 │   ├── ForecastList.tsx
 │   ├── ForecastDay.tsx
 │   ├── UnitToggle.tsx
+│   ├── SourceAttribution.tsx
 │   └── states/
 ├── hooks/
 │   ├── useWeatherApp.ts
@@ -97,11 +100,12 @@ interface Location {
 interface CurrentConditions {
   temperatureC: number | null;
   apparentTemperatureC: number | null;
+  minimumTodayC: number | null;
+  maximumTodayC: number | null;
   conditionCode: number | null;
   sourceTimestamp: string | null;
   timeZone: string | null;
   origin: WeatherOrigin;
-  receivedAt: number;
 }
 
 interface ForecastDay {
@@ -118,8 +122,9 @@ interface ForecastDay {
 interface WeatherSnapshot {
   locationId: string;
   current: CurrentConditions | null;
+  currentReceivedAt: number | null;
   forecast: ForecastDay[];
-  receivedAt: number;
+  forecastReceivedAt: number | null;
 }
 
 interface SavedPreferences {
@@ -144,7 +149,7 @@ Regras do contrato:
 3. Se a localização for obtida a tempo, selecioná-la como “Minha localização” e iniciar o clima. Se falhar, restaurar a localidade explícita salva e buscar dados novos; sem uma localidade válida, mostrar busca e a lista fixa de capitais na ordem da spec.
 4. Ao submeter a busca, normalizar com trim, NFC e redução de espaços internos; contar clusters Unicode percebidos pelo usuário e exigir ao menos dois, com uma letra ou número. Consulta inválida não chama o serviço. Cada busca ganha um identificador e um `AbortController`; somente a busca mais recente pode publicar resultados, erros ou timeout.
 5. A seleção explícita de um resultado ou capital atualiza a localidade, salva apenas seus dados necessários para nova consulta e inicia a atualização meteorológica. Uma seleção mais recente invalida as tentativas anteriores.
-6. Consultar clima atual e previsão em paralelo, com estados independentes e prazo comum de oito segundos. Exibir seções/campos válidos conforme chegam; não substituir campo ausente por dado de outra seção, data ou localidade. Uma resposta em andamento pode manter snapshot anterior apenas se `locationId` for igual, marcado como anterior e com horário de atualização.
+6. Consultar clima atual e previsão em paralelo, com estados independentes e prazo comum de oito segundos. A consulta do clima atual inclui também as mínimas e máximas diárias da data local atual; assim, esses campos continuam disponíveis mesmo se a consulta da previsão falhar. Exibir seções/campos válidos conforme chegam; não substituir campo ausente por dado de outra data ou localidade. Uma resposta em andamento pode manter snapshot anterior apenas se `locationId` for igual, marcado como anterior e com o horário de recebimento da seção.
 7. Para as capitais, renderizar a lista fixa imediatamente e iniciar uma consulta atual independente por cartão. Aplicar limite de oito segundos por cartão; falha ou timeout afeta apenas aquele cartão.
 8. A unidade é aplicada na apresentação a partir do valor Celsius não arredondado. A alternância não gera nova consulta meteorológica.
 
@@ -236,7 +241,7 @@ Substituir `{cidade}` pela consulta normalizada e codificada como parâmetro de 
 GET https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_min,temperature_2m_max,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&hourly=relative_humidity_2m&temperature_unit=celsius&wind_speed_unit=kmh&precipitation_unit=mm&timezone=auto&forecast_days=5
 ```
 
-`{lat}` e `{lon}` são as coordenadas da localidade selecionada. Os parâmetros `current`, `daily` e `hourly` definem os campos consumidos; `temperature_unit=celsius`, `wind_speed_unit=kmh` e `precipitation_unit=mm` tornam explícitas as unidades esperadas. `timezone=auto` solicita o fuso da coordenada e `forecast_days=5` cobre hoje e os quatro dias seguintes. O adaptador pode fazer chamadas de seção independentes ao mesmo endpoint, omitindo os grupos de parâmetros que não pertencem à seção, para que uma falha não invalide a outra. A umidade média diária é calculada a partir dos valores horários disponíveis daquele dia; probabilidade máxima, precipitação acumulada e vento máximo usam agregados diários semanticamente equivalentes.
+`{lat}` e `{lon}` são as coordenadas da localidade selecionada. Os parâmetros `current`, `daily` e `hourly` definem os campos consumidos; `temperature_unit=celsius`, `wind_speed_unit=kmh` e `precipitation_unit=mm` tornam explícitas as unidades esperadas. `timezone=auto` solicita o fuso da coordenada e `forecast_days=5` cobre hoje e os quatro dias seguintes. Fazer duas chamadas independentes para a localidade selecionada: clima atual com `current=temperature_2m,apparent_temperature,weather_code`, `daily=temperature_2m_min,temperature_2m_max`, `temperature_unit=celsius`, `timezone=auto` e `forecast_days=1`; previsão com todos os grupos indicados na URL acima. Isso obtém os extremos da data local de hoje e preserva estados/falhas independentes sem duplicar os campos da previsão completa na consulta atual. A umidade média diária é calculada a partir dos valores horários disponíveis daquele dia; probabilidade máxima, precipitação acumulada e vento máximo usam agregados diários semanticamente equivalentes.
 
 Usar o fuso IANA retornado pela fonte e validar que pode ser usado. As datas da previsão são chaves de calendário local, não timestamps interpretados no fuso do dispositivo. Construir hoje e os quatro dias seguintes no fuso da localidade; mapear os dados pela data retornada. Lacunas preservam sua posição e deixam campos indisponíveis. Sem fuso válido, a previsão fica indisponível e pode ser tentada novamente.
 
@@ -247,18 +252,35 @@ Usar o fuso IANA retornado pela fonte e validar que pode ser usado. As datas da 
 Manter estado local da aplicação em hook de orquestração, separado por domínio e seção. Forma indicativa:
 
 ```ts
-type AsyncStatus = 'idle' | 'loading' | 'success' | 'empty' | 'error' | 'partial';
+type AsyncStatus = 'idle' | 'loading' | 'success' | 'empty' | 'error' | 'partial' | 'unavailable';
+
+interface AsyncSection<T> {
+  status: AsyncStatus;
+  data: T | null;
+  error: string | null;
+  receivedAt: number | null;
+  attemptId: number | null;
+}
 
 interface WeatherAppState {
   query: string;
-  search: { status: AsyncStatus; results: Location[]; message: string | null };
+  search: {
+    status: AsyncStatus;
+    results: Location[];
+    message: string | null;
+    validationMessage: string | null;
+    attemptId: number | null;
+  };
   location: Location | null;
-  current: { status: AsyncStatus; data: CurrentConditions | null; error: string | null };
-  forecast: { status: AsyncStatus; days: ForecastDay[]; error: string | null };
+  current: AsyncSection<CurrentConditions>;
+  forecast: AsyncSection<ForecastDay[]>;
+  capitalWeather: Record<string, AsyncSection<CurrentConditions>>;
   unit: TemperatureUnit;
   locationStatus: 'checking' | 'success' | 'denied' | 'unavailable' | 'timeout' | 'idle';
 }
 ```
+
+`validationMessage` representa erro síncrono de entrada e não altera o status assíncrono da busca. `capitalWeather` é indexado pelo ID estável de cada capital fixa; cada seção mantém status, tentativa e recebimento próprios. O recebimento é registrado por seção para que dados anteriores mostrem o horário correto mesmo quando atual e previsão terminam em instantes diferentes.
 
 - Estados assíncronos devem carregar o identificador da tentativa ativa; reducer/guardas ignoram respostas que não correspondam à tentativa e à localidade atuais.
 - `AbortController` reduz trabalho desnecessário, enquanto identificadores de tentativa garantem descarte lógico mesmo quando o transporte não puder ser cancelado.
@@ -286,7 +308,7 @@ interface WeatherAppState {
 - **Domínio:** normalização NFC/espaços, consulta vazia/curta/sem letras ou números e contagem de clusters Unicode; conversão C/F sem perda por conversões sucessivas e arredondamento de empate para longe de zero; limites de idade do timestamp, futuro/inválido; datas locais em fusos e transição de dia; agregação diária e preservação de cinco posições.
 - **Serviços:** respostas válidas e parciais, campos ausentes, resultados vazios, erro HTTP/429, JSON inválido, timeout e cancelamento. Verificar que unidades e metadados são mapeados corretamente.
 - **Hooks/estado:** precedência da localização sobre cidade salva, restauração após falha, ausência de persistência de coordenadas do dispositivo, isolamento por localidade, respostas fora de ordem e descarte de resultado/erro tardio.
-- **Componentes:** estados inicial, loading, vazio, erro, parcial e indisponível; unidade em todos os valores; nomes acessíveis e interação por teclado.
+- **Componentes:** estados inicial, loading, vazio, erro, parcial e indisponível; validação de entrada sem requisição; unidade em todos os valores; extremos de hoje independentes da previsão; cards isolados; atribuição global presente; nomes acessíveis e interação por teclado.
 
 Usar `fetch` e relógio controlados nos testes para reproduzir prazos e ordem de resposta sem depender da rede real.
 
@@ -294,7 +316,8 @@ Usar `fetch` e relógio controlados nos testes para reproduzir prazos e ordem de
 
 - Fluxo de busca, desambiguação e seleção; localização concedida/negada e fallback; cards fixos e falha isolada; clima atual, cinco dias e alternância de unidade; persistência ao recarregar; recuperação de erro/429 e proteção contra respostas obsoletas.
 - Testar layouts nos viewports de 360, 768, 1024 e 1440 CSS px e em larguras intermediárias relevantes, confirmando ausência de rolagem horizontal.
-- Cobrir navegação por teclado, foco visível, nomes/estados acessíveis e `prefers-reduced-motion` nos fluxos principais.
+- Executar os fluxos principais em Chromium, Firefox e WebKit na CI. No gate de release, fazer smoke test nos navegadores exigidos pela RNF2: versão estável atual e anterior de Chrome, Edge, Firefox e Safari desktop, além de Chrome para Android e Safari para iOS ainda suportados; registrar as versões. O smoke test cobre busca, seleção, consulta, erro/retry e unidade, sem repetir toda a suíte em cada combinação.
+- Usar `@axe-core/playwright` como dependência somente de teste para verificar WCAG 2.2 AA nas telas inicial, carregada e de erro/parcial. Complementar com checagem de contraste, teclado, foco visível, anúncio de estados e `prefers-reduced-motion`; verificar também formatação pt-BR e presença/link da atribuição aprovada.
 - Interceptar endpoints com `page.route` para respostas determinísticas; não tornar a suíte dependente da disponibilidade da Open-Meteo.
 
 ## 10. Risks & Trade-offs
@@ -312,9 +335,10 @@ Usar `fetch` e relógio controlados nos testes para reproduzir prazos e ordem de
 
 ### Rastreabilidade e gates
 
-- **Busca, seleção, localização, capitais e concorrência:** RF1, RF6; US1-CA01–US1-CA14; RNF3, RNF4 e RNF7.
-- **Clima atual, timestamp, parcialidade e origem:** RF2, RF6; US2-CA01–US2-CA09; RNF4–RNF7.
+- **Busca, seleção, localização, capitais e concorrência:** RF1, RF6; US1-CA01–US1-CA14; RNF1–RNF7.
+- **Clima atual, timestamp, parcialidade, origem e atribuição:** RF2, RF6; US2-CA01–US2-CA09; RNF1–RNF7.
 - **Cinco datas locais e agregados diários:** RF3, RF6; US3-CA01–US3-CA06; RNF1–RNF6.
-- **Conversão e persistência:** RF4, RF5; US4-CA01–US4-CA05; RNF1, RNF3, RNF5 e RNF7.
+- **Conversão e persistência:** RF4, RF5; US4-CA01–US4-CA05; RNF1, RNF2, RNF3, RNF5 e RNF7.
 - **Timeout, retries e restauração:** RF1, RF2, RF3, RF5 e RF6; US5-CA01–US5-CA09; RNF3, RNF4, RNF6 e RNF7.
+- **Acessibilidade, compatibilidade e responsividade:** RNF1–RNF3; validar a suíte automatizada e o smoke test da matriz de release antes de publicar.
 - Antes de publicar com Open-Meteo, registrar aprovação de: termos/atribuição; contrato do clima atual; contrato e semântica da previsão; limites operacionais e compatibilidade com os prazos. Gate não aprovado significa que a fonte continua candidata e não pode ser declarada conforme.
