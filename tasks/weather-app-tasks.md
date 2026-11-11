@@ -10,6 +10,63 @@ Tarefas com subtarefas são agrupadoras: concluir o ID-pai significa concluir
 todas as subtarefas; dependências de outras tarefas que citam o pai aguardam o
 conjunto inteiro.
 
+## Prioridade e tamanho
+
+Prioridades indicam ordem de trabalho, não escopo: **P0** desbloqueia a primeira
+fatia utilizável ou é bloqueador de release; **P1** completa e valida o MVP após
+o fluxo principal; **P2** pode vir depois do fluxo principal, mas continua no
+escopo e precisa ser concluído antes do aceite final. Tamanhos são relativos:
+**P** é pequeno e focado, **M** envolve uma camada/domínio com integração
+moderada, **G** tem várias camadas, estados concorrentes ou validação ampla. O
+tamanho do ID-pai é agregado às suas subtarefas.
+
+| Prioridade | Tarefa | Tamanho |
+| --- | --- | --- |
+| P0 | T-01 | M |
+| P0 | T-02 | M |
+| P0 | T-03 | P |
+| P0 | T-04 | P |
+| P0 | T-06 | M |
+| P0 | T-07 | M |
+| P0 | T-08 | M |
+| P0 | T-09 | M |
+| P0 | T-10 | G |
+| P0 | T-11 | G |
+| P0 | T-12 | G |
+| P0 | T-12.1 | M |
+| P0 | T-12.2 | M |
+| P0 | T-14 | G |
+| P0 | T-15 | M |
+| P0 | T-16 | G |
+| P0 | T-19 | P |
+| P0 | T-21 | M |
+| P0 | T-22 | P |
+| P0 | T-23 | M |
+| P0 | T-25 | M |
+| P0 | T-27 | M |
+| P0 | T-31 | G |
+| P0 | T-32 | M |
+| P1 | T-05 | P |
+| P1 | T-17 | G |
+| P1 | T-17.1 | M |
+| P1 | T-17.2 | P |
+| P1 | T-17.3 | M |
+| P1 | T-18 | G |
+| P1 | T-18.1 | M |
+| P1 | T-18.2 | P |
+| P1 | T-18.3 | P |
+| P1 | T-18.4 | P |
+| P1 | T-18.5 | P |
+| P1 | T-20 | P |
+| P1 | T-24 | G |
+| P1 | T-28 | M |
+| P1 | T-29 | G |
+| P1 | T-30 | M |
+| P2 | T-13 | G |
+| P2 | T-13.1 | M |
+| P2 | T-13.2 | M |
+| P2 | T-26 | P |
+
 ## Entrega 1 — Base da aplicação e contratos
 
 ### T-01 — Definir os tipos de domínio e estados assíncronos
@@ -341,7 +398,7 @@ conjunto inteiro.
 ### T-24 — Testar orquestração, concorrência e persistência de estado
 
 - **Rastreabilidade:** RF1, RF2, RF5, RF6; US1-CA03, US1-CA04, US1-CA11, US1-CA13, US1-CA14, US2-CA07, US5-CA04–US5-CA06, US5-CA08.
-- **Dependências:** T-11–T-14, T-17.
+- **Dependências:** T-11–T-14, T-17, T-18.
 - **Arquivos prováveis:** `tests/unit/useGeolocation.test.ts`, `tests/unit/useWeatherApp.test.tsx`.
 - **Critérios de aceite:**
   - Testes cobrem precedência entre localização e cidade salva, timeout e descarte de geolocalização tardia. (Spec: RF1, RF5, RNF4; US1-CA03–CA04, US1-CA14, US5-CA05.)
@@ -434,3 +491,37 @@ conjunto inteiro.
 As tarefas devem ser executadas na ordem dos IDs, respeitando as dependências
 indicadas. T-31 é um gate de release, não uma aprovação presumida pelo sucesso
 dos testes; T-32 é o gate final de qualidade da implementação.
+
+## Sequência em fatias verticais
+
+O caminho mais curto para valor visível é permitir uma busca real e mostrar
+condições atuais antes de completar toda a experiência semanal. A preparação
+técnica abaixo respeita as dependências atuais; o clima atual e a previsão são
+consultados em paralelo, mas suas seções podem ser apresentadas
+independentemente.
+
+1. **Preparar contratos e acesso a dados:** T-01, T-03, T-04, T-06–T-11. Iniciar
+  também a investigação dos gates externos de T-31 em paralelo, sobretudo
+  termos, campos e limites; não tratar a Open-Meteo como aprovada enquanto os
+  gates estiverem pendentes.
+2. **Busca → cidade selecionada → clima atual visível:** T-02, T-12.1, T-12.2,
+  T-14 e T-15. Entrega demonstrável: pesquisar uma cidade, selecioná-la e
+  exibir as condições atuais reais, com carregamento e falha parcial
+  identificáveis. Verificações focadas: T-19, T-21–T-23 e T-25.
+3. **Completar o planejamento de cinco dias:** T-16 e T-27. A seção de clima
+  atual da fatia anterior pode continuar visível enquanto a previsão carrega;
+  esta fatia acrescenta as cinco datas locais e seus campos disponíveis.
+4. **Recuperação e unidade:** T-05, T-17.1–T-17.3, T-18.1–T-18.2,
+  T-18.4–T-18.5, T-20 e T-28. Entrega: retry manual e alternância Celsius /
+  Fahrenheit no clima atual e na previsão. T-18 só fica concluída após sua
+  integração com os cartões da fatia seguinte.
+5. **Capitais e integração de estado:** T-13.1, T-13.2, T-18.3, T-24 e T-26.
+  Entrega: lista fixa com dados meteorológicos carregados independentemente e
+  seleção de capital; completa também a conversão de temperatura nesses
+  cartões e a cobertura de concorrência/persistência integrada.
+6. **Validar release:** T-29, T-30, conclusão dos gates em T-31 e T-32. Os gates
+  externos devem ser investigados desde a primeira fatia; aprovação pendente ou
+  reprovada bloqueia publicação com a fonte candidata.
+
+Ao fim de cada fatia de código, executar os gates aplicáveis de lint, build e
+testes, sem esperar a fatia final para descobrir regressões.
