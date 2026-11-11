@@ -467,6 +467,10 @@ tamanho do ID-pai é agregado às suas subtarefas.
   - Verificações cobrem navegação por teclado, ordem e visibilidade de foco, anúncios assíncronos, contraste e `prefers-reduced-motion`. (Spec: RNF3.)
   - Busca, seleção, alternância de unidade e retry são exercitáveis sem mouse; eventuais limitações são registradas como bloqueios de aceite. (Spec: RNF3; US1-CA12, US5-CA07.)
 
+**Situação:** implementação parcial; aceite bloqueado pela T-29, pelos fluxos
+ainda ausentes e pelas validações de navegador/manual pendentes. Cobertura,
+evidências e roteiro manual em [Auditoria de acessibilidade](../docs/accessibility-audit.md).
+
 ### T-31 — Executar gates da fonte e smoke test da matriz de release
 
 - **Rastreabilidade:** RF2, RF3; RNF2, RNF4, RNF6; gates 1–4 da seção 9 da spec.
