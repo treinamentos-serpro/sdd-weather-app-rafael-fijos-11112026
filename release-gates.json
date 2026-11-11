@@ -1,0 +1,40 @@
+{
+  "source": "Open-Meteo",
+  "gates": [
+    {
+      "id": "terms",
+      "status": "pending",
+      "approvedBy": null,
+      "checkedAt": null,
+      "evidence": ["https://open-meteo.com/en/terms", "https://open-meteo.com/en/licence"]
+    },
+    {
+      "id": "current-contract",
+      "status": "pending",
+      "approvedBy": null,
+      "checkedAt": null,
+      "evidence": ["docs/source-validation.md"]
+    },
+    {
+      "id": "forecast-contract",
+      "status": "pending",
+      "approvedBy": null,
+      "checkedAt": null,
+      "evidence": ["docs/source-validation.md"]
+    },
+    {
+      "id": "operational-limits",
+      "status": "pending",
+      "approvedBy": null,
+      "checkedAt": null,
+      "evidence": ["https://open-meteo.com/en/terms"]
+    }
+  ],
+  "manualAccessibility": {
+    "status": "pending",
+    "approvedBy": null,
+    "checkedAt": null,
+    "evidence": []
+  },
+  "browserMatrix": { "status": "pending", "approvedBy": null, "checkedAt": null, "evidence": [] }
+}

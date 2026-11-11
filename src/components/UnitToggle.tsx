@@ -16,12 +16,12 @@ export default function UnitToggle({ unit, onUnitChange }: UnitToggleProps) {
         <button
           aria-label={option === 'celsius' ? 'Celsius' : 'Fahrenheit'}
           aria-pressed={unit === option}
-          className={`rounded-md px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${unit === option ? 'bg-accent-500 text-white' : 'text-white hover:bg-white/10'}`}
+          className={`min-h-11 rounded-md px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${unit === option ? 'bg-accent-500 text-night-900' : 'text-white hover:bg-white/10'}`}
           key={option}
           onClick={() => onUnitChange(option)}
           type="button"
         >
-          {option === 'celsius' ? '°C' : '°F'}
+          {option === 'celsius' ? 'Celsius' : 'Fahrenheit'}
         </button>
       ))}
     </div>

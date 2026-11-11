@@ -45,4 +45,5 @@ export interface AsyncSection<T> {
   error: string | null;
   receivedAt: number | null;
   attemptId: number | null;
+  previous?: boolean;
 }

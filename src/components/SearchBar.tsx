@@ -1,35 +1,23 @@
+import { RotateCcw } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+import { isValidQuery, normalizeQuery } from '../lib/query';
 
-type SearchStatus = 'idle' | 'loading' | 'empty' | 'error';
+type SearchStatus = 'idle' | 'loading' | 'empty' | 'error' | 'success';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   status?: SearchStatus;
   errorMessage?: string;
-}
-
-const segmenter = new (
-  Intl as unknown as {
-    Segmenter: new (
-      locales: string[],
-      options: { granularity: 'grapheme' },
-    ) => { segment: (input: string) => Iterable<unknown> };
-  }
-).Segmenter(['pt-BR'], { granularity: 'grapheme' });
-
-function normalizeQuery(value: string): string {
-  return value.normalize('NFC').trim().replace(/\s+/gu, ' ');
-}
-
-function isValidQuery(query: string): boolean {
-  const graphemeCount = Array.from(segmenter.segment(query)).length;
-  return graphemeCount >= 2 && /[\p{L}\p{N}]/u.test(query);
+  onReset?: () => void;
+  onRetry?: () => void;
 }
 
 export default function SearchBar({
   onSearch,
   status = 'idle',
   errorMessage = 'Não foi possível buscar cidades. Tente novamente.',
+  onReset,
+  onRetry,
 }: SearchBarProps) {
   const [value, setValue] = useState('');
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
@@ -39,6 +27,7 @@ export default function SearchBar({
     const query = normalizeQuery(value);
 
     if (!isValidQuery(query)) {
+      onReset?.();
       setValidationMessage('Digite ao menos dois caracteres, incluindo uma letra ou número.');
       return;
     }
@@ -52,11 +41,13 @@ export default function SearchBar({
     const query = normalizeQuery(nextValue);
 
     if (!query) {
+      onReset?.();
       setValidationMessage(null);
       return;
     }
 
     if (!isValidQuery(query)) {
+      onReset?.();
       setValidationMessage('Digite ao menos dois caracteres, incluindo uma letra ou número.');
       return;
     }
@@ -91,7 +82,7 @@ export default function SearchBar({
           value={value}
         />
         <button
-          className="shrink-0 rounded-lg bg-accent-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-accent-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="shrink-0 rounded-lg bg-accent-500 px-4 py-3 font-semibold text-night-900 transition-colors hover:bg-accent-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
           type="submit"
         >
           Buscar
@@ -111,6 +102,17 @@ export default function SearchBar({
         >
           {feedback}
         </p>
+      )}
+      {status === 'error' && !validationMessage && onRetry && (
+        <button
+          aria-describedby="city-search-feedback"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md border border-white/30 px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          onClick={onRetry}
+          type="button"
+        >
+          <RotateCcw aria-hidden="true" className="size-4" />
+          Repetir busca
+        </button>
       )}
     </form>
   );

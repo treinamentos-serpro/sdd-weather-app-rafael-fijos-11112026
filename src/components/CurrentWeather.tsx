@@ -1,4 +1,6 @@
 import { Droplets, Sun, Umbrella, Wind } from 'lucide-react';
+import { formatTimestamp } from '../lib/format';
+import { getFreshness, isValidTimeZone } from '../lib/localDates';
 import { formatTemperature } from '../lib/temperature';
 import { getWeatherCondition } from '../lib/weatherCondition';
 import type { Location } from '../types/location';
@@ -9,6 +11,8 @@ interface CurrentWeatherProps {
   location: Location;
   conditions: CurrentConditions | null;
   unit: TemperatureUnit;
+  receivedAt?: number | null;
+  previous?: boolean;
   metrics?: {
     humidityPercent: number | null;
     windKmh: number | null;
@@ -28,6 +32,8 @@ export default function CurrentWeather({
   conditions,
   unit,
   metrics,
+  receivedAt = null,
+  previous = false,
 }: CurrentWeatherProps) {
   const { label, Icon } = getWeatherCondition(conditions?.conditionCode ?? null);
   const measurements = [
@@ -42,11 +48,23 @@ export default function CurrentWeather({
       aria-labelledby="weather-location"
       className="border-y border-white/15 bg-white/5 px-4 py-8 backdrop-blur-md sm:px-8"
     >
-      <h2 className="text-2xl font-semibold sm:text-3xl" id="weather-location">
+      <h2 className="break-words text-2xl font-semibold sm:text-3xl" id="weather-location">
         {location.name}
       </h2>
       <p className="mt-1 text-sm text-white/70">
         {[location.admin1, location.country].filter(Boolean).join(', ')}
+      </p>
+      <p className="mt-3 text-sm text-white/80">
+        {formatTimestamp(conditions?.sourceTimestamp ?? null, conditions?.timeZone ?? null)}
+      </p>
+      <p className="mt-1 text-sm text-white/80">
+        {previous
+          ? 'Dados anteriores'
+          : isValidTimeZone(conditions?.timeZone)
+            ? getFreshness(conditions?.sourceTimestamp ?? null, receivedAt)
+            : 'Atualidade indisponível'}
+        {conditions?.origin === 'model' && ' · Estimativa'}
+        {conditions?.origin === 'observation' && ' · Observado'}
       </p>
       <div className="my-8 flex flex-wrap items-center gap-6 sm:gap-10">
         <Icon
@@ -57,7 +75,9 @@ export default function CurrentWeather({
         <div className="min-w-0">
           <p
             className={
-              conditions?.temperatureC == null ? 'text-2xl' : 'text-7xl font-semibold sm:text-8xl'
+              conditions?.temperatureC == null
+                ? 'text-2xl'
+                : 'break-words text-6xl font-semibold sm:text-8xl'
             }
           >
             {formatTemperature(conditions?.temperatureC ?? null, unit)}

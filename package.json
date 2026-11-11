@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "check:release": "node scripts/check-release.mjs",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {

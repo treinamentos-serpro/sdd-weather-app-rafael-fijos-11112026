@@ -1,4 +1,5 @@
 import { CloudDrizzle } from 'lucide-react';
+import { formatLocalDate, formatNumber } from '../lib/format';
 import { formatTemperature } from '../lib/temperature';
 import { getWeatherCondition } from '../lib/weatherCondition';
 import type { TemperatureUnit } from '../types/preferences';
@@ -7,23 +8,6 @@ import type { ForecastDay } from '../types/weather';
 interface ForecastGridProps {
   forecast: ForecastDay[];
   unit: TemperatureUnit;
-}
-
-function formatForecastDate(localDate: string): string {
-  const date = new Date(`${localDate}T12:00:00Z`);
-  if (!Number.isFinite(date.getTime())) return 'Data indisponível';
-
-  return new Intl.DateTimeFormat('pt-BR', {
-    weekday: 'short',
-    day: '2-digit',
-    month: '2-digit',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
-function formatProbability(value: number | null): string {
-  if (value === null || !Number.isFinite(value)) return 'Indisponível';
-  return `${new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(value)}%`;
 }
 
 export default function ForecastGrid({ forecast, unit }: ForecastGridProps) {
@@ -37,7 +21,7 @@ export default function ForecastGrid({ forecast, unit }: ForecastGridProps) {
         className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
       >
         {forecast.slice(0, 5).map((day) => {
-          const dateLabel = formatForecastDate(day.localDate);
+          const dateLabel = formatLocalDate(day.localDate);
           const { label, Icon } = getWeatherCondition(day.conditionCode);
 
           return (
@@ -54,8 +38,22 @@ export default function ForecastGrid({ forecast, unit }: ForecastGridProps) {
               <p className="text-sm text-white/70">Mín {formatTemperature(day.minimumC, unit)}</p>
               <p className="mt-4 flex items-center gap-2 text-sm text-white/80">
                 <CloudDrizzle aria-hidden="true" className="h-4 w-4 shrink-0 text-accent-400" />
-                <span>Prob. de chuva {formatProbability(day.precipitationProbabilityPercent)}</span>
+                <span>Prob. de chuva {formatNumber(day.precipitationProbabilityPercent, '%')}</span>
               </p>
+              <dl className="mt-3 space-y-3 break-words text-sm text-white/80">
+                <div>
+                  <dt>Precipitação</dt>
+                  <dd>{formatNumber(day.precipitationMm, ' mm')}</dd>
+                </div>
+                <div>
+                  <dt>Umidade média</dt>
+                  <dd>{formatNumber(day.meanHumidityPercent, '%')}</dd>
+                </div>
+                <div>
+                  <dt>Vento máximo</dt>
+                  <dd>{formatNumber(day.maximumWindKmh, ' km/h')}</dd>
+                </div>
+              </dl>
             </li>
           );
         })}
