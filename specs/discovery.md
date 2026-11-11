@@ -11,15 +11,14 @@ O briefing define as capacidades principais, mas não detalha quais dados meteor
 - **RF1 — Buscar cidades:** permitir que o usuário pesquise uma cidade pelo nome e selecione o local desejado.
 - **RF2 — Exibir clima atual:** mostrar as condições meteorológicas atuais da cidade selecionada.
 - **RF3 — Exibir previsão:** mostrar a previsão do tempo para os próximos cinco dias.
-- **RF4 — Alternar unidade:** permitir alternar entre Celsius e Fahrenheit e atualizar os valores de temperatura exibidos.
+- **RF4 — Alternar unidade:** permitir alternar entre Celsius e Fahrenheit e atualizar os valores de temperatura do clima atual e da previsão.
 
 ## Requisitos Não-Funcionais
 
-- **RNF1 — Compatibilidade móvel:** a aplicação deve ser utilizável em dispositivos móveis.
-- **RNF2 — Responsividade:** a interface deve se adaptar a diferentes tamanhos de tela, incluindo dispositivos móveis e desktops.
+- **RNF1 — Compatibilidade:** a aplicação deve funcionar em navegadores modernos de dispositivos móveis.
+- **RNF2 — Responsividade:** a interface deve adaptar seu layout a diferentes tamanhos de tela, incluindo dispositivos móveis e desktops.
 - **RNF3 — Usabilidade:** busca, consulta da previsão e alternância de unidade devem ser compreensíveis e fáceis de acessar.
 - **RNF4 — Acessibilidade:** controles e informações meteorológicas devem ser acessíveis por teclado e identificáveis por tecnologias assistivas.
-- **RNF5 — Consistência:** valores de temperatura devem respeitar a unidade selecionada em todas as áreas da aplicação.
 
 ## Riscos
 
@@ -31,20 +30,6 @@ O briefing define as capacidades principais, mas não detalha quais dados meteor
 | Valores incorretos após alternar entre Celsius e Fahrenheit | Baixa | Alto | Definir uma conversão consistente e validar os valores nas duas unidades. |
 | Interface difícil de usar em telas pequenas | Média | Alto | Projetar e testar os fluxos principais em dispositivos móveis e diferentes larguras de tela. |
 
-## Perguntas em Aberto (Open Questions)
-
-1. Qual fonte de dados meteorológicos será usada? **Impacto:** determina cobertura, custo, limites de uso e necessidade de credenciais.
-2. Quais informações devem aparecer no clima atual, além da temperatura? **Impacto:** afeta o escopo dos dados, a interface e os critérios de aceite.
-3. Como devem ser apresentados os cinco dias: hoje mais quatro dias ou os cinco dias seguintes? **Impacto:** altera o intervalo da previsão e a forma de rotular as datas.
-4. A previsão deve mostrar apenas um resumo diário ou também informações por hora? **Impacto:** muda a complexidade da integração e da interface.
-5. Como a busca deve tratar cidades com o mesmo nome? **Impacto:** sem desambiguação, o usuário pode consultar a localização errada.
-6. Qual unidade deve ser selecionada inicialmente? **Impacto:** define os valores exibidos na primeira consulta.
-7. A preferência de unidade deve ser lembrada entre sessões? **Impacto:** determina se é necessário armazenar preferências no dispositivo ou no servidor.
-8. Quais idiomas e regiões devem ser suportados? **Impacto:** afeta textos, formatos de data e apresentação de unidades.
-9. Deve haver geolocalização automática ou busca por localização atual? **Impacto:** envolve permissões do navegador e um fluxo adicional de privacidade e UX.
-10. A aplicação precisa oferecer cache ou algum suporte offline? **Impacto:** afeta atualidade dos dados e complexidade de armazenamento e sincronização.
-11. Quais são os alvos de desempenho e disponibilidade? **Impacto:** sem metas, não é possível definir critérios objetivos de operação e experiência.
-
 ## Suposições (Assumptions)
 
 - O usuário inicia a consulta pesquisando uma cidade; geolocalização automática não foi solicitada.
@@ -54,3 +39,22 @@ O briefing define as capacidades principais, mas não detalha quais dados meteor
 - A aplicação depende de conexão com a internet para buscar dados meteorológicos.
 - O suporte a dispositivos móveis é obrigatório; a compatibilidade detalhada com navegadores e tamanhos de tela ainda precisa ser definida.
 - As instruções do projeto indicam Open-Meteo como fonte de dados prevista, sem chave de API. Essa decisão deve ser confirmada como requisito da entrega.
+
+## Perguntas em Aberto e Impactos
+
+1. **Quem é o público prioritário e qual necessidade principal a aplicação deve atender?** **Impacto:** sem esse foco, a equipe pode priorizar informações ou fluxos inadequados e não terá uma base comum para avaliar se o produto resolve o problema.
+2. **A Open-Meteo será a fonte de dados da entrega e quais condições de uso, atribuição, cobertura e limites se aplicam?** **Impacto:** a implementação pode não atender à cobertura esperada, exceder limites ou descumprir exigências da fonte; uma indisponibilidade sem alternativa também pode interromper o serviço.
+3. **Quais informações são obrigatórias no clima atual e qual instante representa “atual”, incluindo idade máxima aceitável e indicação de dados atrasados ou indisponíveis?** **Impacto:** diferentes implementações podem exibir conjuntos de dados incompatíveis ou apresentar dados antigos como atuais, reduzindo confiança e tornando o aceite subjetivo.
+4. **“Cinco dias” inclui hoje ou corresponde aos cinco dias completos seguintes, e qual fuso horário define as datas locais?** **Impacto:** o intervalo e os rótulos podem divergir da expectativa do usuário ou mostrar datas incorretas para a cidade selecionada.
+5. **A previsão será apenas diária ou também horária, e quais métricas devem ser exibidas em cada período?** **Impacto:** escopo de dados, complexidade da integração e desenho da interface permanecem indeterminados, dificultando estimativas e critérios de aceite.
+6. **Como a busca deve funcionar (consulta mínima, ordenação e limite de resultados, seleção por teclado e mensagens para entrada inválida ou sem resultados)?** **Impacto:** usuários podem não encontrar ou selecionar a localidade e os estados de busca podem variar entre implementações.
+7. **Como distinguir cidades homônimas e quais países, regiões e tipos de localidade serão cobertos?** **Impacto:** o usuário pode consultar o lugar errado ou encontrar falhas sem explicação; a cobertura não poderá ser validada contra um escopo acordado.
+8. **Qual unidade será inicial, quais valores serão convertidos e quais regras de arredondamento e apresentação se aplicam?** **Impacto:** unidades podem ficar inconsistentes entre clima atual e previsão, e arredondamentos diferentes podem produzir valores conflitantes.
+9. **A unidade escolhida e a última cidade devem ser mantidas entre recarregamentos ou sessões?** **Impacto:** a experiência pode ser inconsistente e a implementação pode armazenar preferências sem requisitos claros de duração e escopo.
+10. **Quais idiomas e regiões serão suportados, incluindo formatos de data, hora, números e nomes das condições meteorológicas?** **Impacto:** informações podem ficar ambíguas ou inadequadas para o público e não haverá base para validar a experiência regional.
+11. **Deve haver geolocalização ou consulta pela localização atual, além da busca por cidade?** **Impacto:** permissões, tratamento de recusa e implicações de privacidade podem ser ignorados ou implementados de forma inesperada.
+12. **Como tratar carregamento, falhas de busca ou previsão, respostas parciais, limites de requisição e nova tentativa?** **Impacto:** a aplicação pode ficar bloqueada ou apresentar dados incompletos como válidos, sem distinguir erro de serviço de ausência de resultados.
+13. **Qual deve ser a política de atualização, cache e funcionamento sem conexão, incluindo quando dados anteriores podem ser exibidos?** **Impacto:** dados vencidos podem ser confundidos com atuais ou requisições podem ser excessivas; não há equilíbrio acordado entre atualidade e disponibilidade.
+14. **Quais são as metas de desempenho e disponibilidade e quais navegadores, versões e larguras de tela precisam ser suportados?** **Impacto:** termos como “moderno”, “responsivo” e “rápido” não são verificáveis e a equipe não consegue avaliar objetivamente compatibilidade e qualidade operacional.
+15. **Qual nível ou padrão de acessibilidade será exigido e quais verificações específicas se aplicam a teclado, leitores de tela, foco, contraste e atualizações?** **Impacto:** acessibilidade permanece uma intenção genérica e barreiras importantes podem chegar à entrega sem serem detectadas.
+16. **Quais cenários e dados mínimos definem o aceite de cada requisito e quais capacidades fazem parte do MVP?** **Impacto:** escopo, prioridade e conclusão da entrega ficam sujeitos a interpretações diferentes, tornando revisão e testes inconsistentes.
