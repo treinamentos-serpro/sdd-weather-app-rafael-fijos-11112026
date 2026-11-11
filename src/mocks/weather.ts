@@ -1,0 +1,80 @@
+import type { Location } from '../types/location';
+import type { WeatherSnapshot } from '../types/weather';
+
+export const mockLocation = {
+  id: 'mock-sao-paulo',
+  name: 'São Paulo',
+  admin1: 'São Paulo',
+  country: 'Brasil',
+  latitude: -23.55,
+  longitude: -46.63,
+  source: 'geocoding',
+} satisfies Location;
+
+export const mockWeatherSnapshot = {
+  locationId: mockLocation.id,
+  current: {
+    temperatureC: 24.5,
+    apparentTemperatureC: 25.2,
+    minimumTodayC: 18.1,
+    maximumTodayC: 27.3,
+    conditionCode: 2,
+    sourceTimestamp: '2026-11-11T15:00:00Z',
+    timeZone: 'America/Sao_Paulo',
+    origin: 'unclassified',
+  },
+  currentReceivedAt: Date.parse('2026-11-11T15:05:00Z'),
+  forecast: [
+    {
+      localDate: '2026-11-11',
+      conditionCode: 2,
+      minimumC: 18.1,
+      maximumC: 27.3,
+      precipitationMm: 0.4,
+      precipitationProbabilityPercent: 30,
+      meanHumidityPercent: 65,
+      maximumWindKmh: 16,
+    },
+    {
+      localDate: '2026-11-12',
+      conditionCode: 3,
+      minimumC: 19,
+      maximumC: 26.4,
+      precipitationMm: 1.2,
+      precipitationProbabilityPercent: 55,
+      meanHumidityPercent: 72,
+      maximumWindKmh: 18,
+    },
+    {
+      localDate: '2026-11-13',
+      conditionCode: 61,
+      minimumC: 18.5,
+      maximumC: 23.8,
+      precipitationMm: 6.8,
+      precipitationProbabilityPercent: 80,
+      meanHumidityPercent: 83,
+      maximumWindKmh: 21,
+    },
+    {
+      localDate: '2026-11-14',
+      conditionCode: 1,
+      minimumC: 17.6,
+      maximumC: 25.1,
+      precipitationMm: 0,
+      precipitationProbabilityPercent: 15,
+      meanHumidityPercent: 64,
+      maximumWindKmh: 14,
+    },
+    {
+      localDate: '2026-11-15',
+      conditionCode: 0,
+      minimumC: 18.2,
+      maximumC: 28,
+      precipitationMm: 0,
+      precipitationProbabilityPercent: 5,
+      meanHumidityPercent: 58,
+      maximumWindKmh: 12,
+    },
+  ],
+  forecastReceivedAt: Date.parse('2026-11-11T15:05:00Z'),
+} satisfies WeatherSnapshot;
