@@ -22,13 +22,16 @@ O briefing define as capacidades principais, mas não detalha quais dados meteor
 
 ## Riscos
 
+As probabilidades abaixo são estimativas qualitativas preliminares e devem ser revistas após a definição do público, da fonte de dados e dos critérios de aceite.
+
 | Risco | Probabilidade | Impacto | Mitigação |
 | --- | --- | --- | --- |
-| A busca retornar cidades homônimas ou resultados imprecisos | Média | Alto | Apresentar informações adicionais, como estado e país, para distinguir resultados. |
-| A fonte de dados meteorológicos ficar indisponível ou responder lentamente | Média | Alto | Exibir estados de carregamento e erro e permitir nova tentativa. |
-| A previsão disponível não corresponder à expectativa de “cinco dias” | Média | Médio | Confirmar se o período inclui o dia atual e explicitar as datas exibidas. |
-| Valores incorretos após alternar entre Celsius e Fahrenheit | Baixa | Alto | Definir uma conversão consistente e validar os valores nas duas unidades. |
-| Interface difícil de usar em telas pequenas | Média | Alto | Projetar e testar os fluxos principais em dispositivos móveis e diferentes larguras de tela. |
+| A busca seleciona uma cidade homônima ou uma localidade diferente da pretendida | Média | Alto | Exibir cidade, região administrativa e país nos resultados; exigir seleção explícita e validar buscas com homônimos e sem resultados. |
+| A fonte de dados fica indisponível, lenta ou limita requisições | Média | Alto | Definir timeout e estados de carregamento/erro, permitir nova tentativa e validar limites e disponibilidade da fonte antes da entrega. |
+| A fonte não cobre a localidade ou retorna dados incompletos/desatualizados | Média | Alto | Validar a cobertura e a atualidade dos dados para localidades representativas; identificar dados ausentes ou antigos e não apresentá-los como completos/atuais. |
+| O período ou as datas da previsão divergem da expectativa para “cinco dias” | Média | Médio | Definir se hoje está incluído e usar o fuso horário da localidade; exibir datas explícitas e testar limites entre dias. |
+| Temperaturas ficam inconsistentes ao alternar entre Celsius e Fahrenheit | Baixa | Alto | Definir regra de conversão e arredondamento em um único ponto e testar valores do clima atual e da previsão nas duas unidades. |
+| A experiência é incompatível com telas pequenas ou inacessível por teclado/leitor de tela | Média | Alto | Definir navegadores, larguras e critérios de acessibilidade suportados; validar os fluxos principais em dispositivos móveis e com testes de teclado e tecnologia assistiva. |
 
 ## Suposições (Assumptions)
 
