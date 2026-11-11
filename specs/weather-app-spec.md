@@ -1,6 +1,6 @@
 # Especificação de Produto — Weather App
 
-**Status:** especificação inicial consolidada com as decisões de produto respondidas; validação técnica da fonte e cobertura permanece pendente.
+**Status:** especificação inicial consolidada; a cobertura da Open-Meteo é assumida para o MVP. A validação dos termos de uso e dos campos meteorológicos permanece pendente.
 
 ## 1. Overview
 
@@ -18,17 +18,18 @@ O produto será uma experiência web responsiva para mobile e desktop, em portug
 - A busca deve distinguir consulta sem correspondência de falha do serviço e permitir que o usuário corrija a consulta ou tente novamente.
 - Se uma nova consulta for iniciada antes de a anterior terminar, somente resultados correspondentes à consulta mais recente podem ser exibidos ou selecionados.
 - Ao abrir a aplicação, deve ser solicitada permissão para obter a localização do dispositivo. Se concedida, a previsão deve usar as coordenadas detectadas e identificá-las na interface como “Minha localização”.
-- Se a localização for negada, indisponível ou não obtida em oito segundos, a aplicação deve restaurar a última cidade salva, se houver. Se não houver cidade salva, deve exibir a busca e cards das dez capitais nacionais mais populosas por aglomeração urbana, conforme a edição mais recente disponível do World Urbanization Prospects da ONU, mantendo a lista fixa durante cada versão do produto.
+- Se a localização for negada, indisponível ou não obtida em oito segundos, a aplicação deve restaurar a última cidade salva, se houver. Se não houver cidade salva, deve exibir a busca e cards de uma lista mockada fixa de dez capitais de grandes populações: Tóquio, Nova Délhi, Seul, Daca, Cairo, Cidade do México, Pequim, Kinshasa, Buenos Aires e Manila. A lista não depende de consulta nem atualização de ranking demográfico.
 - Cada card deve apresentar cidade, condição e temperatura atual quando disponíveis. Ao selecioná-lo, a aplicação deve abrir a previsão de cinco dias daquela cidade.
 - A busca manual por cidade permanece disponível independentemente da permissão de localização.
 
 ### RF2 — Consultar o clima atual
 
 - Para a cidade selecionada, a aplicação deve exibir condição meteorológica, temperatura, sensação térmica e temperaturas mínima e máxima do dia local, quando fornecidas pela fonte.
-- A aplicação deve exibir a localidade consultada e o horário informado pela fonte, convertido para o fuso horário da cidade. Se a fonte não fornecer horário, a interface deve indicar que ele está indisponível.
+- A aplicação deve exibir a localidade consultada e o horário informado pela fonte para as condições atuais, convertido para o fuso horário da localidade. Se a fonte não fornecer timestamp para as condições atuais, elas devem ser identificadas como indisponíveis para consulta atual.
 - Dados ausentes devem ser identificados individualmente, sem inventar valores. Uma resposta parcial não deve ser apresentada como completa.
-- Dados atuais só podem ser apresentados como atuais quando a fonte fornecer um indicador explícito de atualidade e esse indicador não os classificar como desatualizados. Sem esse indicador, os dados meteorológicos devem ser identificados como indisponíveis para consulta atual; o horário informado pela fonte deve continuar visível quando existir.
-- A apresentação deve deixar claro se a condição atual fornecida representa observação ou estimativa/modelo, conforme a natureza da fonte. A fonte só pode ser adotada após a validação de seus termos; atribuição exigida deve ser apresentada na aplicação.
+- Condições atuais com timestamp de até três horas, inclusive, podem ser apresentadas como atuais; dados com timestamp mais antigo devem ser identificados como desatualizados. A idade deve ser calculada em relação ao horário atual e ao timestamp fornecido pela fonte.
+- A apresentação deve deixar claro se a condição atual fornecida representa observação ou estimativa/modelo. Dados modelados devem ser identificados como estimativas, nunca como observações diretas.
+- A Open-Meteo só pode ser usada se seus termos permitirem o uso previsto no MVP. A atribuição exigida deve aparecer no rodapé global, no formato necessário para cumprir os termos.
 
 ### RF3 — Consultar a previsão diária
 
@@ -169,9 +170,12 @@ Como pessoa que organiza atividades da semana, quero entender quando a consulta 
 
 - As personas, frequências e plataformas são hipóteses derivadas do discovery e ainda não foram validadas com pesquisa.
 - A pessoa que planeja atividades semanais é o público prioritário; deslocamento diário e consulta de destinos são usos secundários.
-- A Open-Meteo é a fonte proposta para geocodificação e dados meteorológicos, incluindo condições atuais e previsão, condicionada à validação de cobertura, indicador explícito de atualidade, natureza dos dados atuais, limites de uso e atribuição.
+- A cobertura da Open-Meteo para as localidades do MVP é assumida. A fonte é proposta para geocodificação e dados meteorológicos, incluindo condições atuais e previsão; seu uso depende de os termos permitirem o produto e de seus limites de uso e atribuição serem atendidos.
+- O timestamp da fonte é a referência de atualidade: dados com até três horas podem ser apresentados como atuais; dados mais antigos ou sem timestamp não podem ser apresentados como atuais.
+- Condições atuais modeladas devem ser identificadas como estimativas. Dados diários parciais são aceitos; campos ausentes devem ser identificados individualmente enquanto os demais dados são exibidos.
+- A atribuição da Open-Meteo deve aparecer no rodapé global, conforme os requisitos de seus termos de uso.
 - “Cinco dias” significa hoje e os quatro dias seguintes, em granularidade diária.
-- A localização detectada prevalece sobre a cidade salva. Se não houver localização nem cidade salva, a tela inicial apresenta busca e cards das dez capitais nacionais mais populosas por aglomeração urbana, usando a edição mais recente disponível do World Urbanization Prospects da ONU.
+- A localização detectada prevalece sobre a cidade salva. Se não houver localização nem cidade salva, a tela inicial apresenta busca e os dez cards mockados fixos definidos em RF1.
 - A previsão diária inclui, além de condição e temperaturas, precipitação acumulada em mm, probabilidade máxima de precipitação em %, umidade relativa média em % e velocidade máxima do vento em km/h, quando disponíveis.
 - Celsius é a unidade inicial; Fahrenheit também é suportado.
 - A aplicação requer conexão para buscar dados atuais; não oferece suporte offline no MVP.
@@ -184,7 +188,7 @@ Como pessoa que organiza atividades da semana, quero entender quando a consulta 
 | --- | --- | --- | --- |
 | Seleção de cidade homônima ou incorreta | Média | Alto | Apresentar dados geográficos de desambiguação e exigir seleção explícita; validar buscas homônimas. |
 | Fonte externa indisponível, lenta ou limitada | Média | Alto | Aplicar timeout, estados de erro e nova tentativa; validar limites e disponibilidade antes de confirmar a fonte. |
-| Cobertura insuficiente ou ausência de indicador de atualidade | Média | Alto | Validar cidades representativas; identificar dados ausentes, mostrar o horário e não apresentar dados atuais sem indicador explícito da fonte. |
+| Dados atuais antigos ou ausência de campos meteorológicos | Média | Alto | Aplicar o limite de três horas pelo timestamp, identificar dados ausentes e exibir os demais campos; validar a disponibilidade dos campos nas localidades do MVP. |
 | Interpretação divergente dos cinco dias ou datas incorretas | Média | Médio | Especificar hoje mais quatro dias e usar calendário/fuso da cidade selecionada; testar mudança de dia. |
 | Temperaturas inconsistentes entre unidades | Baixa | Alto | Aplicar regra consistente de conversão e arredondamento e validar todas as temperaturas atuais e diárias. |
 | Barreiras de uso em mobile ou para pessoas com deficiência | Média | Alto | Validar larguras definidas, teclado, leitor de tela, foco e contraste contra o alvo WCAG 2.2 AA. |
@@ -200,9 +204,8 @@ Como pessoa que organiza atividades da semana, quero entender quando a consulta 
 
 ## 9. Open Questions
 
-As decisões de produto desta versão foram respondidas. Antes de confirmar a fonte e a cobertura do MVP, ainda é necessário validar:
+As decisões de produto desta versão foram respondidas. A cobertura da Open-Meteo é assumida para o MVP. Ainda é necessário validar:
 
-1. A Open-Meteo oferece um indicador explícito de atualidade para os dados atuais, além da cobertura, atribuição e limites de uso necessários?
-2. A edição mais recente do World Urbanization Prospects da ONU permite identificar de forma consistente as dez capitais nacionais mais populosas por aglomeração urbana?
-3. A fonte oferece precipitação acumulada, probabilidade máxima de precipitação, umidade relativa média e velocidade máxima do vento para os dias e localidades esperados?
-4. A busca por nome e a consulta pelas coordenadas do dispositivo atendem às localidades desejadas, inclusive em casos de homônimos e de baixa cobertura?
+1. Os termos da Open-Meteo permitem o uso previsto no MVP e a atribuição no rodapé global atende às exigências do provedor?
+2. A fonte fornece timestamp para as condições atuais e informa se os dados são observações ou estimativas de modo que a interface possa identificá-los corretamente?
+3. Qual é a disponibilidade de precipitação acumulada, probabilidade máxima de precipitação, umidade relativa média e velocidade máxima do vento nas localidades esperadas? Campos ausentes serão aceitos e identificados como parciais.
