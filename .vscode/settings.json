@@ -1,4 +1,5 @@
 {
+  "github.copilot.chat.agentDebugLog.fileLogging.enabled": true,
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "biomejs.biome",
   "editor.codeActionsOnSave": {
@@ -13,4 +14,5 @@
   },
   "files.eol": "\n",
   "chat.promptFiles": true
+  
 }
