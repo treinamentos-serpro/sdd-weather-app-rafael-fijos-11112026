@@ -6,6 +6,16 @@ A empresa deseja uma aplicação de previsão do tempo que permita consultar as 
 
 O briefing define as capacidades principais, mas não detalha quais dados meteorológicos exibir, como resolver cidades com nomes iguais ou quais critérios de desempenho e acessibilidade atender.
 
+## Personas e Objetivos
+
+As personas abaixo são hipóteses iniciais derivadas do escopo do briefing; frequência de acesso, critério de sucesso e plataforma são hipóteses a validar com usuários antes de orientar decisões definitivas de produto.
+
+| Persona | Objetivo | Frequência de acesso | Critério de sucesso pessoal | Plataforma de uso |
+| --- | --- | --- | --- | --- |
+| Pessoa que planeja o deslocamento diário | Consultar o clima atual e os próximos dias da cidade onde está para se preparar para as condições do dia. | Diária: todos ou quase todos os dias. | Sair preparada para as condições do dia sem precisar consultar várias fontes. | Mobile, principalmente antes de sair ou durante o deslocamento. |
+| Pessoa que organiza atividades da semana | Consultar a previsão diária para escolher quando realizar atividades ou compromissos ao ar livre. | Semanal: uma ou mais vezes por semana. | Escolher um dia adequado e organizar a atividade com confiança. | Desktop, principalmente durante o planejamento da semana. |
+| Pessoa que consulta uma cidade antes de uma visita ou viagem | Buscar o destino correto e verificar as condições previstas para decidir o que levar ou como se preparar. | Eventual: quando surge uma necessidade pontual, como uma viagem. | Confirmar que consultou o destino pretendido e preparar-se adequadamente para o clima previsto. | Mobile ou desktop, conforme o momento e o dispositivo disponível. |
+
 ## Requisitos Funcionais
 
 - **RF1 — Buscar cidades:** permitir que o usuário pesquise uma cidade pelo nome e selecione o local desejado.
